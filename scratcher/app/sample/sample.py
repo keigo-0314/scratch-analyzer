@@ -11,6 +11,7 @@ from api import scratch_client
 from api import drscratch_analyzer
 import prjman
 from prjman import ProjectManager
+from collections import defaultdict
 
 def extract_ids_from_files(directory):
     """ディレクトリ内のJSONファイルからauthor ID、project ID、remix root IDを抽出
@@ -24,12 +25,15 @@ def extract_ids_from_files(directory):
     project_ids = []
     remix_root_ids = []
 
+    author_project_count = defaultdict(int)
+    author_projects = defaultdict(list)
+    
     file_pattern = os.path.join(directory, '*.json')
 
     for file_path in glob.glob(file_pattern):
         if os.path.isfile(file_path):
             try:
-                with open(file_path, 'r') as file:
+                with open(file_path, 'r', encoding='utf-8') as file:
                     data = json.load(file)
                     if isinstance(data, list):
                         for project in data:
@@ -44,9 +48,12 @@ def extract_ids_from_files(directory):
                                 "root" in project["remix"] and
                                 isinstance(project["remix"]["root"], int)
                             ):
-                                author_ids.append(project["author"]["id"])
-                                project_ids.append(project["id"])
-                                remix_root_ids.append(project["remix"]["root"])
+                                author_id = project["author"]["id"]
+                                project_id = project["id"]
+                                remix_root_id = project["remix"]["root"]
+                                
+                                author_project_count[author_id] += 1
+                                author_projects[author_id].append((project_id, remix_root_id))
                     else:
                         print(f"ファイルのデータ形式が予期しない形式: {file_path}")
             except json.JSONDecodeError:
@@ -54,10 +61,64 @@ def extract_ids_from_files(directory):
             except Exception as e:
                 print(f"ファイルの読み込み中にエラーが発生 {file_path}: {e}")
 
+    for author_id, count in author_project_count.items():
+        if count >= 20:
+            for project_id, remix_root_id in author_projects[author_id]:
+                author_ids.append(author_id)
+                project_ids.append(project_id)
+                remix_root_ids.append(remix_root_id)
+
     if not author_ids or not project_ids or not remix_root_ids:
         print("指定されたディレクトリには有効なデータがない")
 
     return author_ids, project_ids, remix_root_ids
+
+# def extract_ids_from_files(directory):
+#     """ディレクトリ内のJSONファイルからauthor ID、project ID、remix root IDを抽出
+#     Args:
+#         directory (str): JSONファイルが含まれるディレクトリのパス
+
+#     Returns:
+#         author ID、project ID、およびremix root IDのリスト
+#     """
+#     author_ids = []
+#     project_ids = []
+#     remix_root_ids = []
+
+#     file_pattern = os.path.join(directory, '*.json')
+
+#     for file_path in glob.glob(file_pattern):
+#         if os.path.isfile(file_path):
+#             try:
+#                 with open(file_path, 'r') as file:
+#                     data = json.load(file)
+#                     if isinstance(data, list):
+#                         for project in data:
+#                             if (
+#                                 "author" in project and
+#                                 "id" in project and
+#                                 "id" in project["author"] and
+#                                 isinstance(project["author"]["id"], int) and
+#                                 isinstance(project["id"], int) and
+#                                 project["id"] > 276751787 and
+#                                 "remix" in project and
+#                                 "root" in project["remix"] and
+#                                 isinstance(project["remix"]["root"], int)
+#                             ):
+#                                 author_ids.append(project["author"]["id"])
+#                                 project_ids.append(project["id"])
+#                                 remix_root_ids.append(project["remix"]["root"])
+#                     else:
+#                         print(f"ファイルのデータ形式が予期しない形式: {file_path}")
+#             except json.JSONDecodeError:
+#                 print(f"JSONのデコードエラーが発生: {file_path}")
+#             except Exception as e:
+#                 print(f"ファイルの読み込み中にエラーが発生 {file_path}: {e}")
+
+#     if not author_ids or not project_ids or not remix_root_ids:
+#         print("指定されたディレクトリには有効なデータがない")
+
+#     return author_ids, project_ids, remix_root_ids
 
 def extract_metrics(project_ids, author_ids, remix_root_ids):
     """ScratchプロジェクトIDのリストからメトリクスを抽出
@@ -98,12 +159,8 @@ def extract_metrics(project_ids, author_ids, remix_root_ids):
             del author_ids[i]
             del remix_root_ids[i]
 
-        # ct_directory = '../../dataset/projects_ct'
-        #     with open('out.json', 'r', encoding='utf-8') as file:
-        #     data = json.load(file)
-        # # # CTScoreの値をint型の変数に格納
-        # ct_score = data["CTScore"]
-
+        ct_directory = '../../dataset/projects_ct'
+        file_path = os.path.join(ct_directory, f"{project_id}_ct.json")
 
     return blocks_lengths.copy(), block_types_lengths.copy(), sprites_lengths.copy()
 
@@ -143,12 +200,34 @@ def save_ct_score_file(project_ids):
             ct_directory = '../../dataset/projects_ct'
             mastery.process(os.path.join(json_directory, f"{project_id}.json"))
             mastery.analyze(os.path.join(ct_directory, f"{project_id}＿ct.json"))
+            i += 1
         except Exception as e:
-                print(f"プロジェクトID {project_id} のct_JSONを保存中にエラー発生")
-                print(e)
-                i += 1
-        else:
-            print(f"プロジェクトID {project_id} のct_JSONを取得不可")
+            print(f"プロジェクトID {project_id} のct_JSONを保存中にエラー発生")
+            print(e)
+            i += 1
+
+def ct_score(project_ids):
+    i = 0
+    while i < len(project_ids):
+        try:
+            ct_directory = '../../dataset/projects_ct'
+            file_path = os.path.join(ct_directory, f"{project_id}_ct.json")
+            with open(file_path, 'w', encoding='utf-8') as f:
+                data = json.load(f)
+                # # CTScoreの値をint型の変数に格納
+                ct_score = data["CTScore"]
+                logic_score = data["Logic"]["MaxScore"]
+                flowControl_score = data["FlowControl"]["MaxScore"]
+                synchronization_score = data["Synchronization"]["MaxScore"]
+                abstraction_score = data["Abstraction"]["MaxScore"]
+                dataRepresentation_score = data["DataRepresentation"]["MaxScore"]
+                userInteractivity_score = data["UserInteractivity"]["MaxScore"]
+                parallelism_score = data["Parallelism"]["MaxScore"]
+
+            i += 1
+        except Exception as e:
+            print(f"エラーが発生")
+            print(e)
             i += 1
 
 def count_files_in_directory(directory, pattern="*"):
@@ -167,20 +246,23 @@ def count_files_in_directory(directory, pattern="*"):
         
 # 使用例
 directory = '../../dataset/projects'
-# author_ids, project_ids, remix_root_ids = extract_ids_from_files(directory)
+author_ids, project_ids, remix_root_ids = extract_ids_from_files(directory)
+print(len(project_ids))
 # blocks_lengths, block_types_lengths, sprites_lengths = extract_metrics(project_ids, author_ids, remix_root_ids)
 
 # 作品をjsonファイルに保存
-save_directory = '../../dataset/projects_json'
-# save_project_json(project_ids, save_directory)
+# save_directory = '../../dataset/projects_json'
+# save_project_json(remix_root_ids, save_directory)
 
 # 作品のCT_SCOREを取得し，ファイルに保存
-ct_directory = '../../dataset/projects_ct'
-# save_ct_score_file(project_ids)
+# ct_directory = '../../dataset/projects_ct'
+# save_ct_score_file(remix_root_ids)
 
 # ファイル数確認
 # print("all_projects: " + str(count_files_in_directory(save_directory)))
 # print("ctscore_projects: " + str(count_files_in_directory(ct_directory)))
+
+
 
 # メトリクス抽出
 # def extract_metrics(project_ids):
