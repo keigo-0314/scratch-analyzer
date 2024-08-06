@@ -17,13 +17,15 @@ def extract_ids_from_files(directory):
     """ディレクトリ内のJSONファイルからauthor ID、project ID、remix root IDを抽出
     Args:
         directory (str): JSONファイルが含まれるディレクトリのパス
-
     Returns:
-        author ID、project ID、およびremix root IDのリスト
+        author ID、project ID、remix root IDのリスト
     """
     author_ids = []
     project_ids = []
     remix_root_ids = []
+    file_error = 0
+    decode_error = 0
+    program_error = 0
 
     author_project_count = defaultdict(int)
     author_projects = defaultdict(list)
@@ -41,12 +43,11 @@ def extract_ids_from_files(directory):
                                 "author" in project and
                                 "id" in project and
                                 "id" in project["author"] and
-                                isinstance(project["author"]["id"], int) and
-                                isinstance(project["id"], int) and
+                                # isinstance(project["author"]["id"], int) and
+                                # isinstance(project["id"], int) and
                                 project["id"] > 276751787 and
                                 "remix" in project and
-                                "root" in project["remix"] and
-                                isinstance(project["remix"]["root"], int)
+                                "root" in project["remix"]
                             ):
                                 author_id = project["author"]["id"]
                                 project_id = project["id"]
@@ -56,10 +57,13 @@ def extract_ids_from_files(directory):
                                 author_projects[author_id].append((project_id, remix_root_id))
                     else:
                         print(f"ファイルのデータ形式が予期しない形式: {file_path}")
+                        file_error += 1 
             except json.JSONDecodeError:
                 print(f"JSONのデコードエラーが発生: {file_path}")
+                decode_error += 1
             except Exception as e:
                 print(f"ファイルの読み込み中にエラーが発生 {file_path}: {e}")
+                program_error += 1
 
     for author_id, count in author_project_count.items():
         if count >= 20:
@@ -71,22 +75,24 @@ def extract_ids_from_files(directory):
     if not author_ids or not project_ids or not remix_root_ids:
         print("指定されたディレクトリには有効なデータがない")
 
+    print("file_error: " + str(file_error))
+    print("decode_error: " + str(decode_error))
+    print("program_error: " + str(program_error))
     return author_ids, project_ids, remix_root_ids
 
 def extract_metrics(project_ids, author_ids, remix_root_ids):
     """ScratchプロジェクトIDのリストからメトリクスを抽出
-
     Args:
         project_ids (list): ScratchプロジェクトIDのリスト
         author_ids (list): プロジェクトIDに対応するauthorIDのリスト
         remix_root_ids (list): プロジェクトIDに対応するremixrootIDのリスト
-
     Returns:
-        tuple: ブロックの長さ、ブロックタイプの長さ、およびスプライトの長さのリスト
+        tuple: ブロック数、ブロック種類数、およびスプライト数のリスト
     """
     blocks_lengths = []
     block_types_lengths = []
     sprites_lengths = []
+    API_error = 0
 
     i = 0
     while i < len(project_ids):
@@ -97,33 +103,36 @@ def extract_metrics(project_ids, author_ids, remix_root_ids):
             block_types_lengths.append(project_manager.get_blocks_type_length())
             sprites_lengths.append(project_manager.get_sprites_length())
 
-            print("blocks count = " + str(blocks_lengths[-1]))
-            print("blockType = " + str(block_types_lengths[-1]))
-            print("sprites count = " + str(sprites_lengths[-1]))
+            # print("blocks count = " + str(blocks_lengths[-1]))
+            # print("blockType = " + str(block_types_lengths[-1]))
+            # print("sprites count = " + str(sprites_lengths[-1]))
             i += 1
         except IndexError:
             print(f"プロジェクトID {project_id} の処理中にインデックスエラーが発生　リストから削除")
             del project_ids[i]
             del author_ids[i]
             del remix_root_ids[i]
+            API_error += 1
+            i += 1
         except Exception as e:
             print(f"プロジェクトID {project_id} の処理中にエラーが発生　リストから削除: {e}")
             del project_ids[i]
             del author_ids[i]
             del remix_root_ids[i]
+            API_error += 1
+            i += 1
 
-        ct_directory = '../../dataset/projects_ct'
-        file_path = os.path.join(ct_directory, f"{project_id}_ct.json")
-
+    print("API_eroor = " + str(API_error))
     return blocks_lengths.copy(), block_types_lengths.copy(), sprites_lengths.copy()
 
 def save_project_json(project_ids, directory):
     """プロジェクトJSONをファイルに保存
-
     Args:
         project_id (int): プロジェクトID
         directory (str): 保存先ディレクトリのパス
     """
+    program_error = 0
+
     i = 0
     while i < len(project_ids):
         project_id = project_ids[i]
@@ -139,9 +148,13 @@ def save_project_json(project_ids, directory):
                 print(f"プロジェクトID {project_id} のJSONを保存中にエラー発生")
                 print(e)
                 i += 1
+                program_error += 1
         else:
             print(f"プロジェクトID {project_id} のJSONを取得不可")
             i += 1
+            project_error += 1
+    print("program_error = " + str(program_error))
+    print("project_error = " + str(project_error))
         
 def save_ct_score_file(project_ids):
     i = 0
@@ -201,11 +214,15 @@ def count_files_in_directory(directory, pattern="*"):
 directory = '../../dataset/projects'
 author_ids, project_ids, remix_root_ids = extract_ids_from_files(directory)
 print(len(project_ids))
-# blocks_lengths, block_types_lengths, sprites_lengths = extract_metrics(project_ids, author_ids, remix_root_ids)
+blocks_lengths, block_types_lengths, sprites_lengths = extract_metrics(project_ids, author_ids, remix_root_ids)
+
+# ct_directory = '../../dataset/projects_ct'
+# file_path = os.path.join(ct_directory, f"{project_id}_ct.json")
 
 # 作品をjsonファイルに保存
-# save_directory = '../../dataset/projects_json'
-# save_project_json(remix_root_ids, save_directory)
+save_directory = '../../dataset/projects_json'
+save_project_json(project_ids, save_directory)
+save_project_json(remix_root_ids, save_directory)
 
 # 作品のCT_SCOREを取得し，ファイルに保存
 # ct_directory = '../../dataset/projects_ct'
