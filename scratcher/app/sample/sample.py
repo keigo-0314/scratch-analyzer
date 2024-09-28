@@ -23,29 +23,25 @@ def extract_ids_from_files(directory):
     author_ids = []
     project_ids = []
     remix_root_ids = []
-    file_error = 0
-    decode_error = 0
-    program_error = 0
-
+    # file_error = 0
+    # decode_error = 0
+    # program_error = 0
     author_project_count = defaultdict(int)
     author_projects = defaultdict(list)
-    
     file_pattern = os.path.join(directory, '*.json')
 
-    for file_path in glob.glob(file_pattern):
+    for file_path in glob.glob(file_pattern): ## ファイル網羅
         if os.path.isfile(file_path):
             try:
                 with open(file_path, 'r', encoding='utf-8') as file:
                     data = json.load(file)
                     if isinstance(data, list):
-                        for project in data:
+                        for project in data: ## ファイル内の作品1つずつ網羅
                             if (
                                 "author" in project and
                                 "id" in project and
                                 "id" in project["author"] and
-                                # isinstance(project["author"]["id"], int) and
-                                # isinstance(project["id"], int) and
-                                project["id"] > 276751787 and
+                                project["id"] > 276751787 and ## scratch3.0
                                 "remix" in project and
                                 "root" in project["remix"]
                             ):
@@ -57,13 +53,13 @@ def extract_ids_from_files(directory):
                                 author_projects[author_id].append((project_id, remix_root_id))
                     else:
                         print(f"ファイルのデータ形式が予期しない形式: {file_path}")
-                        file_error += 1 
+                        # file_error += 1 
             except json.JSONDecodeError:
                 print(f"JSONのデコードエラーが発生: {file_path}")
-                decode_error += 1
+                # decode_error += 1
             except Exception as e:
                 print(f"ファイルの読み込み中にエラーが発生 {file_path}: {e}")
-                program_error += 1
+                # program_error += 1
 
     for author_id, count in author_project_count.items():
         if count >= 20:
@@ -75,9 +71,9 @@ def extract_ids_from_files(directory):
     if not author_ids or not project_ids or not remix_root_ids:
         print("指定されたディレクトリには有効なデータがない")
 
-    print("file_error: " + str(file_error))
-    print("decode_error: " + str(decode_error))
-    print("program_error: " + str(program_error))
+    # print("file_error: " + str(file_error))
+    # print("decode_error: " + str(decode_error))
+    # print("program_error: " + str(program_error))
     return author_ids, project_ids, remix_root_ids
 
 def extract_metrics(project_ids, author_ids, remix_root_ids):
@@ -92,7 +88,7 @@ def extract_metrics(project_ids, author_ids, remix_root_ids):
     blocks_lengths = []
     block_types_lengths = []
     sprites_lengths = []
-    API_error = 0
+    # API_error = 0
 
     i = 0
     while i < len(project_ids):
@@ -112,17 +108,17 @@ def extract_metrics(project_ids, author_ids, remix_root_ids):
             del project_ids[i]
             del author_ids[i]
             del remix_root_ids[i]
-            API_error += 1
+            # API_error += 1
             i += 1
         except Exception as e:
             print(f"プロジェクトID {project_id} の処理中にエラーが発生　リストから削除: {e}")
             del project_ids[i]
             del author_ids[i]
             del remix_root_ids[i]
-            API_error += 1
+            # API_error += 1
             i += 1
 
-    print("API_eroor = " + str(API_error))
+    # print("API_eroor = " + str(API_error))
     return blocks_lengths.copy(), block_types_lengths.copy(), sprites_lengths.copy()
 
 def save_project_json(project_ids, directory):
@@ -131,7 +127,7 @@ def save_project_json(project_ids, directory):
         project_id (int): プロジェクトID
         directory (str): 保存先ディレクトリのパス
     """
-    program_error = 0
+    # program_error = 0
 
     i = 0
     while i < len(project_ids):
@@ -148,22 +144,26 @@ def save_project_json(project_ids, directory):
                 print(f"プロジェクトID {project_id} のJSONを保存中にエラー発生")
                 print(e)
                 i += 1
-                program_error += 1
+                # program_error += 1
         else:
             print(f"プロジェクトID {project_id} のJSONを取得不可")
             i += 1
-            project_error += 1
-    print("program_error = " + str(program_error))
-    print("project_error = " + str(project_error))
+            # project_error += 1
+    # print("program_error = " + str(program_error))
+    # print("project_error = " + str(project_error))
         
-def save_ct_score_file(project_ids):
+def save_ct_score_file(project_ids, json_directory, ct_directory):
+    """プロジェクトCTスコアをファイルに保存
+    Args:
+        project_id (int): プロジェクトID
+        json_directory (str): 作品ディレクトリのパス
+        ct_directory (str): CTスコアの保存先ディレクトリのパス
+    """
     i = 0
     while i < len(project_ids):
         try:
             project_id = project_ids[i]
             mastery = drscratch_analyzer.Mastery()
-            json_directory = '../../dataset/projects_json'
-            ct_directory = '../../dataset/projects_ct'
             mastery.process(os.path.join(json_directory, f"{project_id}.json"))
             mastery.analyze(os.path.join(ct_directory, f"{project_id}＿ct.json"))
             i += 1
@@ -172,68 +172,134 @@ def save_ct_score_file(project_ids):
             print(e)
             i += 1
 
-def ct_score(project_ids):
-    i = 0
-    while i < len(project_ids):
-        try:
-            ct_directory = '../../dataset/projects_ct'
-            file_path = os.path.join(ct_directory, f"{project_ids[i]}_ct.json")
-            with open(file_path, 'w', encoding='utf-8') as f:
-                data = json.load(f)
-                # # CTScoreの値をint型の変数に格納
-                ct_score = data["CTScore"]
-                logic_score = data["Logic"]["MaxScore"]
-                flowControl_score = data["FlowControl"]["MaxScore"]
-                synchronization_score = data["Synchronization"]["MaxScore"]
-                abstraction_score = data["Abstraction"]["MaxScore"]
-                dataRepresentation_score = data["DataRepresentation"]["MaxScore"]
-                userInteractivity_score = data["UserInteractivity"]["MaxScore"]
-                parallelism_score = data["Parallelism"]["MaxScore"]
-                
-            i += 1
-        except Exception as e:
-            print(f"エラーが発生")
-            print(e)
-            i += 1
 
 def count_files_in_directory(directory, pattern="*"):
     """指定されたディレクトリ内のファイル数をカウント
-
     Args:
         directory (str): ディレクトリのパス
         pattern (str): ファイルパターン（デフォルトは全ファイルを対象）
-
     Returns:
         int: ディレクトリ内のファイル数
     """
     file_pattern = os.path.join(directory, pattern)
     files = glob.glob(file_pattern)
     return len(files)
+
+def process_specific_json_files(folder_path, project_ids):
+    # スコアを作品IDごとに辞書に格納
+    ctscore_result = {
+        "Logic": {},
+        "FlowControl": {},
+        "Synchronization": {},
+        "Abstraction": {},
+        "DataRepresentation": {},
+        "UserInteractivity": {},
+        "Parallelism": {},
+        "CTScore": {}
+    }
+    i = 0
+    
+    # 指定された作品IDリストに基づき、それぞれの "作品ID_ct.json" ファイルを読み込む
+    for project_id in project_ids:
+        file_name = f'{project_id}_ct.json'  # 作品IDに基づいたファイル名を生成
+        file_path = os.path.join(folder_path, file_name)
         
-# 使用例
+        # ファイルが存在するか確認
+        if os.path.exists(file_path):
+            # JSONファイルを読み込む
+            with open(file_path, 'r', encoding='utf-8') as file:
+                data = json.load(file)
+            
+            # 作品IDごとに処理
+            if str(project_id) in data:
+                values = data[i]
+                
+                # それぞれのスコアを作品IDに紐づけて保存
+                ctscore_result["Logic"][i] = values["Logic"]["MaxScore"]
+                ctscore_result["FlowControl"][i] = values["FlowControl"]["MaxScore"]
+                ctscore_result["Synchronization"][i] = values["Synchronization"]["MaxScore"]
+                ctscore_result["Abstraction"][i] = values["Abstraction"]["MaxScore"]
+                ctscore_result["DataRepresentation"][i] = values["DataRepresentation"]["MaxScore"]
+                ctscore_result["UserInteractivity"][i] = values["UserInteractivity"]["MaxScore"]
+                ctscore_result["Parallelism"][i] = values["Parallelism"]["MaxScore"]
+                ctscore_result["CTScore"][i] = values.get("CTScore", 0)  # CTScoreを取得、無ければ0
+                i += 1
+        else:
+            print(f"File for {project_id} not found.")
+            i += 1
+    
+    return ctscore_result
+
+
+def save_to_csv(author_ids, project_ids, remix_root_ids, blocks_lengths, block_types_lengths, sprites_lengths, ct_score_result, csv_file_path):
+    # CSVファイルの保存先ディレクトリを確認・作成
+    csv_directory = os.path.dirname(csv_file_path)
+    if not os.path.exists(csv_directory):
+        os.makedirs(csv_directory)
+    
+    # CSVファイルにデータを書き込む
+    with open(csv_file_path, mode='w', newline='', encoding='utf-8') as file:
+        writer = csv.writer(file)
+        
+        # ヘッダーを記入
+        writer.writerow(["作者ID", "作品ID", "リミックス元ID", "ブロック数", "ブロックの種類数", "スプライト数", "論理", "制御フロー", "同期", "抽象化", "データ表現", "ユーザとの対話性", "並列処理", "CTスコア"])
+        
+        # 各データをまとめて書き込む
+        for i in range(len(project_ids)):
+            writer.writerow([
+                author_ids[i],                                # 作者ID
+                project_ids[i],                               # 作品ID
+                remix_root_ids[i],                            # リミックス元ID
+                blocks_lengths[i],                            # ブロック数
+                block_types_lengths[i],                       # ブロックの種類数
+                sprites_lengths[i],                           # スプライト数
+                ct_score_result["Logic"][i],                  # 論理
+                ct_score_result["FlowControl"][i],            # 制御フロー
+                ct_score_result["Synchronization"][i],        # 同期
+                ct_score_result["Abstraction"][i],            # 抽象化
+                ct_score_result["DataRepresentation"][i],     # データ表現
+                ct_score_result["UserInteractivity"][i],      # ユーザとの対話性
+                ct_score_result["Parallelism"][i],            # 並列処理
+                ct_score_result["CTScore"][i]                 # CTスコア
+            ])
+
+# 使用
+# 作者IDと作品IDとリミックス元ID取得
 directory = '../../dataset/projects'
 author_ids, project_ids, remix_root_ids = extract_ids_from_files(directory)
 print(len(project_ids))
+
+# ブロック数，ブロックの種類数，スプライト数取得
 blocks_lengths, block_types_lengths, sprites_lengths = extract_metrics(project_ids, author_ids, remix_root_ids)
 
-# ct_directory = '../../dataset/projects_ct'
-# file_path = os.path.join(ct_directory, f"{project_id}_ct.json")
-
 # 作品をjsonファイルに保存
-save_directory = '../../dataset/projects_json'
-save_project_json(project_ids, save_directory)
-save_project_json(remix_root_ids, save_directory)
+json_directory = '../../dataset/projects_json'
+remix_json_directory = '../../dataset/projects_remix_json'
+# 作品保存
+save_project_json(project_ids, json_directory)
+# リミックス作品の保存
+save_project_json(remix_root_ids, remix_json_directory)
 
 # 作品のCT_SCOREを取得し，ファイルに保存
-# ct_directory = '../../dataset/projects_ct'
-# save_ct_score_file(remix_root_ids)
+ct_directory = '../../dataset/projects_ct'
+remix_ct_directory = '../../dataset/projects_remix_ct'
+
+# 作品のCTスコアファイルの保存
+save_ct_score_file(remix_root_ids, json_directory, ct_directory)
+# リミックス作品のCTスコアファイルの保存
+save_ct_score_file(remix_root_ids, remix_json_directory, remix_ct_directory)
+
+ct_score_result = process_specific_json_files(ct_directory, project_ids)
+remix_ct_score_result = process_specific_json_files(remix_ct_directory, remix_root_ids)
+
+csv_file_path = '../../dataset'
+
+# csv ni hozon
+save_to_csv(author_ids, project_ids, remix_root_ids, blocks_lengths, block_types_lengths, sprites_lengths, ct_score_result, csv_file_path)
 
 # ファイル数確認
 # print("all_projects: " + str(count_files_in_directory(save_directory)))
 # print("ctscore_projects: " + str(count_files_in_directory(ct_directory)))
-
-
-
 # メトリクス抽出
 # def extract_metrics(project_ids):
 #     blocks_lengths = []
