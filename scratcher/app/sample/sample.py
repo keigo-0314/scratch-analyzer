@@ -286,8 +286,8 @@ def plot_boxplot_from_csv(csv_file_path, columns, output_image_path=None):
     data = pd.read_csv(csv_file_path)
     
     # 箱ひげ図を描画
-    plt.figure(figsize=(10, 6))  # グラフのサイズを指定
-    sns.boxplot(data=data[columns])
+    plt.figure(figsize=(2, 6))  # グラフのサイズを指定
+    sns.boxplot(data=data[columns], palette=["#ADD8E6"] * len(columns))
     
     # グラフのタイトルとラベルを設定
     plt.title('Boxplot of Selected Columns', fontsize=16)
@@ -300,52 +300,52 @@ def plot_boxplot_from_csv(csv_file_path, columns, output_image_path=None):
         plt.savefig(output_image_path)  # 画像として保存（任意）
     plt.show()
 
-# 使用
-# 作者IDと作品IDとリミックス元ID取得
-directory = '../../dataset/projects'
-author_ids, project_ids, remix_root_ids = extract_ids_from_files(directory)
-print("1:" + str(len(project_ids)))
+# # 使用
+# # 作者IDと作品IDとリミックス元ID取得
+# directory = '../../dataset/projects'
+# author_ids, project_ids, remix_root_ids = extract_ids_from_files(directory)
+# print("1:" + str(len(project_ids)))
 
-# ブロック数，ブロックの種類数，スプライト数取得
-blocks_lengths, block_types_lengths, sprites_lengths = extract_metrics(project_ids, author_ids, remix_root_ids)
-print("2:" + str(len(project_ids)))
-print("2:" + str(len(blocks_lengths)))
+# # ブロック数，ブロックの種類数，スプライト数取得
+# blocks_lengths, block_types_lengths, sprites_lengths = extract_metrics(project_ids, author_ids, remix_root_ids)
+# print("2:" + str(len(project_ids)))
+# print("2:" + str(len(blocks_lengths)))
 
-# 作品をjsonファイルに保存
-json_directory = '../../dataset/projects_json'
-remix_json_directory = '../../dataset/projects_remix_json'
-# 作品保存
-save_project_json(project_ids, json_directory)
-print("3:" + str(len(project_ids)))
-print("3:" + str(len(blocks_lengths)))
-# リミックス作品の保存
-# save_project_json(remix_root_ids, remix_json_directory)
-# print("4:" + str(len(project_ids)))
-# print(len((remix_root_ids)))
+# # 作品をjsonファイルに保存
+# json_directory = '../../dataset/projects_json'
+# remix_json_directory = '../../dataset/projects_remix_json'
+# # 作品保存
+# save_project_json(project_ids, json_directory)
+# print("3:" + str(len(project_ids)))
+# print("3:" + str(len(blocks_lengths)))
+# # リミックス作品の保存
+# # save_project_json(remix_root_ids, remix_json_directory)
+# # print("4:" + str(len(project_ids)))
+# # print(len((remix_root_ids)))
 
-# 作品のCT_SCOREを取得し，ファイルに保存
-ct_directory = '../../dataset/projects_ct'
-# remix_ct_directory = '../../dataset/projects_remix_ct'
+# # 作品のCT_SCOREを取得し，ファイルに保存
+# ct_directory = '../../dataset/projects_ct'
+# # remix_ct_directory = '../../dataset/projects_remix_ct'
 
-# 作品のCTスコアファイルの保存
-save_ct_score_file(project_ids, json_directory, ct_directory)
-print("5:" + str(len(project_ids)))
-print("5:" + str(len(blocks_lengths)))
-# リミックス作品のCTスコアファイルの保存
-# save_ct_score_file(remix_root_ids, remix_json_directory, remix_ct_directory)
-# print("6:" + str(len(project_ids)))
-# print(len((remix_root_ids)))
+# # 作品のCTスコアファイルの保存
+# save_ct_score_file(project_ids, json_directory, ct_directory)
+# print("5:" + str(len(project_ids)))
+# print("5:" + str(len(blocks_lengths)))
+# # リミックス作品のCTスコアファイルの保存
+# # save_ct_score_file(remix_root_ids, remix_json_directory, remix_ct_directory)
+# # print("6:" + str(len(project_ids)))
+# # print(len((remix_root_ids)))
 
-Logic, FlowControl, Synchronization, Abstraction, DataRepresentation, UserInteractivity, Parallelism, CTScore = make_list_CTscore(ct_directory, project_ids)
-# remix_ct_score_result = process_specific_json_files(remix_ct_directory, remix_root_ids)
-print("CTscore :" + str(len((CTScore))))
-print("7:" + str(len(project_ids)))
-print("7:" + str(len(blocks_lengths)))
+# Logic, FlowControl, Synchronization, Abstraction, DataRepresentation, UserInteractivity, Parallelism, CTScore = make_list_CTscore(ct_directory, project_ids)
+# # remix_ct_score_result = process_specific_json_files(remix_ct_directory, remix_root_ids)
+# print("CTscore :" + str(len((CTScore))))
+# print("7:" + str(len(project_ids)))
+# print("7:" + str(len(blocks_lengths)))
 
 csv_file_path = '../../dataset/data.csv'
 
 # csv ni hozon
-save_to_csv(author_ids, project_ids, remix_root_ids, blocks_lengths, block_types_lengths, sprites_lengths, Logic, FlowControl, Synchronization, Abstraction, DataRepresentation, UserInteractivity, Parallelism, CTScore, csv_file_path)
+# save_to_csv(author_ids, project_ids, remix_root_ids, blocks_lengths, block_types_lengths, sprites_lengths, Logic, FlowControl, Synchronization, Abstraction, DataRepresentation, UserInteractivity, Parallelism, CTScore, csv_file_path)
 # hakohigezu
 plot_boxplot_from_csv(csv_file_path, "ブロック数", '../../dataset/hakohigezu/countblock.png')
 plot_boxplot_from_csv(csv_file_path, "ブロックの種類数", '../../dataset/hakohigezu/typeblock.png')
