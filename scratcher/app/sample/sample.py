@@ -4,6 +4,9 @@ import os
 import csv
 import glob
 from collections import Counter
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns # type: ignore
 
 sys.path.append("../../")
 
@@ -105,18 +108,16 @@ def extract_metrics(project_ids, author_ids, remix_root_ids):
             i += 1
         except IndexError:
             print(f"プロジェクトID {project_id} の処理中にインデックスエラーが発生　リストから削除")
-            del project_ids[i]
-            del author_ids[i]
-            del remix_root_ids[i]
+            project_ids.pop(i)
+            author_ids.pop(i)
+            remix_root_ids.pop(i)
             # API_error += 1
-            i += 1
         except Exception as e:
             print(f"プロジェクトID {project_id} の処理中にエラーが発生　リストから削除: {e}")
-            del project_ids[i]
-            del author_ids[i]
-            del remix_root_ids[i]
+            project_ids.pop(i)
+            author_ids.pop(i)
+            remix_root_ids.pop(i)
             # API_error += 1
-            i += 1
 
     # print("API_eroor = " + str(API_error))
     return blocks_lengths.copy(), block_types_lengths.copy(), sprites_lengths.copy()
@@ -143,11 +144,21 @@ def save_project_json(project_ids, directory):
             except Exception as e:
                 print(f"プロジェクトID {project_id} のJSONを保存中にエラー発生")
                 print(e)
-                i += 1
+                project_ids.pop(i)
+                author_ids.pop(i)
+                remix_root_ids.pop(i)
+                blocks_lengths.pop(i)
+                block_types_lengths.pop(i)
+                sprites_lengths.pop(i)
                 # program_error += 1
         else:
             print(f"プロジェクトID {project_id} のJSONを取得不可")
-            i += 1
+            project_ids.pop(i)
+            author_ids.pop(i)
+            remix_root_ids.pop(i)
+            blocks_lengths.pop(i)
+            block_types_lengths.pop(i)
+            sprites_lengths.pop(i)
             # project_error += 1
     # print("program_error = " + str(program_error))
     # print("project_error = " + str(project_error))
@@ -165,10 +176,16 @@ def save_ct_score_file(project_ids, json_directory, ct_directory):
             project_id = project_ids[i]
             mastery = drscratch_analyzer.Mastery()
             mastery.process(os.path.join(json_directory, f"{project_id}.json"))
-            mastery.analyze(os.path.join(ct_directory, f"{project_id}＿ct.json"))
+            mastery.analyze(os.path.join(ct_directory, f"{project_id}_ct.json"))
             i += 1
         except Exception as e:
             print(f"プロジェクトID {project_id} のct_JSONを保存中にエラー発生")
+            project_ids.pop(i)
+            author_ids.pop(i)
+            remix_root_ids.pop(i)
+            blocks_lengths.pop(i)
+            block_types_lengths.pop(i)
+            sprites_lengths.pop(i)
             print(e)
             i += 1
 
@@ -185,53 +202,46 @@ def count_files_in_directory(directory, pattern="*"):
     files = glob.glob(file_pattern)
     return len(files)
 
-def process_specific_json_files(folder_path, project_ids):
-    # スコアを作品IDごとに辞書に格納
-    ctscore_result = {
-        "Logic": {},
-        "FlowControl": {},
-        "Synchronization": {},
-        "Abstraction": {},
-        "DataRepresentation": {},
-        "UserInteractivity": {},
-        "Parallelism": {},
-        "CTScore": {}
-    }
-    i = 0
+def make_list_CTscore(ct_directory, project_ids):
+    # スコアを作品IDごとにリストに格納
+    Logic = []
+    FlowControl = []
+    Synchronization = []
+    Abstraction = []
+    DataRepresentation = []
+    UserInteractivity = []
+    Parallelism = []
+    CTScore = []
     
     # 指定された作品IDリストに基づき、それぞれの "作品ID_ct.json" ファイルを読み込む
     for project_id in project_ids:
         file_name = f'{project_id}_ct.json'  # 作品IDに基づいたファイル名を生成
-        file_path = os.path.join(folder_path, file_name)
+        file_path = os.path.join(ct_directory, file_name)
         
         # ファイルが存在するか確認
         if os.path.exists(file_path):
             # JSONファイルを読み込む
             with open(file_path, 'r', encoding='utf-8') as file:
                 data = json.load(file)
-            
-            # 作品IDごとに処理
-            if str(project_id) in data:
-                values = data[i]
                 
-                # それぞれのスコアを作品IDに紐づけて保存
-                ctscore_result["Logic"][i] = values["Logic"]["MaxScore"]
-                ctscore_result["FlowControl"][i] = values["FlowControl"]["MaxScore"]
-                ctscore_result["Synchronization"][i] = values["Synchronization"]["MaxScore"]
-                ctscore_result["Abstraction"][i] = values["Abstraction"]["MaxScore"]
-                ctscore_result["DataRepresentation"][i] = values["DataRepresentation"]["MaxScore"]
-                ctscore_result["UserInteractivity"][i] = values["UserInteractivity"]["MaxScore"]
-                ctscore_result["Parallelism"][i] = values["Parallelism"]["MaxScore"]
-                ctscore_result["CTScore"][i] = values.get("CTScore", 0)  # CTScoreを取得、無ければ0
-                i += 1
+            # それぞれのスコアをリストに追加
+            Logic.append(data["Logic"]["MaxScore"])
+            FlowControl.append(data["FlowControl"]["MaxScore"])
+            Synchronization.append(data["Synchronization"]["MaxScore"])
+            Abstraction.append(data["Abstraction"]["MaxScore"])
+            DataRepresentation.append(data["DataRepresentation"]["MaxScore"])
+            UserInteractivity.append(data["UserInteractivity"]["MaxScore"])
+            Parallelism.append(data["Parallelism"]["MaxScore"])
+            CTScore.append(data.get("CTScore", 0))  # CTScoreを取得、無ければ0
+
+            ct_score_value = data.get("CTScore", 0)
+            # print(f"Project ID: {project_id}, CTScore: {ct_score_value}")
         else:
             print(f"File for {project_id} not found.")
-            i += 1
     
-    return ctscore_result
+    return Logic, FlowControl, Synchronization, Abstraction, DataRepresentation, UserInteractivity, Parallelism, CTScore
 
-
-def save_to_csv(author_ids, project_ids, remix_root_ids, blocks_lengths, block_types_lengths, sprites_lengths, ct_score_result, csv_file_path):
+def save_to_csv(author_ids, project_ids, remix_root_ids, blocks_lengths, block_types_lengths, sprites_lengths, Logic, FlowControl, Synchronization, Abstraction, DataRepresentation, UserInteractivity, Parallelism, CTScore, csv_file_path):
     # CSVファイルの保存先ディレクトリを確認・作成
     csv_directory = os.path.dirname(csv_file_path)
     if not os.path.exists(csv_directory):
@@ -247,116 +257,104 @@ def save_to_csv(author_ids, project_ids, remix_root_ids, blocks_lengths, block_t
         # 各データをまとめて書き込む
         for i in range(len(project_ids)):
             writer.writerow([
-                author_ids[i],                                # 作者ID
-                project_ids[i],                               # 作品ID
-                remix_root_ids[i],                            # リミックス元ID
-                blocks_lengths[i],                            # ブロック数
-                block_types_lengths[i],                       # ブロックの種類数
-                sprites_lengths[i],                           # スプライト数
-                ct_score_result["Logic"][i],                  # 論理
-                ct_score_result["FlowControl"][i],            # 制御フロー
-                ct_score_result["Synchronization"][i],        # 同期
-                ct_score_result["Abstraction"][i],            # 抽象化
-                ct_score_result["DataRepresentation"][i],     # データ表現
-                ct_score_result["UserInteractivity"][i],      # ユーザとの対話性
-                ct_score_result["Parallelism"][i],            # 並列処理
-                ct_score_result["CTScore"][i]                 # CTスコア
+                author_ids[i],             # 作者ID
+                project_ids[i],            # 作品ID
+                remix_root_ids[i],         # リミックス元ID
+                blocks_lengths[i],         # ブロック数
+                block_types_lengths[i],    # ブロックの種類数
+                sprites_lengths[i],        # スプライト数
+                Logic[i],                  # 論理
+                FlowControl[i],            # 制御フロー
+                Synchronization[i],        # 同期
+                Abstraction[i],            # 抽象化
+                DataRepresentation[i],     # データ表現
+                UserInteractivity[i],      # ユーザとの対話性
+                Parallelism[i],            # 並列処理
+                CTScore[i]                 # CTスコア
             ])
+
+def plot_boxplot_from_csv(csv_file_path, columns, output_image_path=None):
+    """
+    CSVファイルから指定された列の箱ひげ図を作成して表示する
+    
+    Args:
+        csv_file_path (str): CSVファイルのパス
+        columns (list): 箱ひげ図を描画する対象の列名リスト
+        output_image_path (str): 保存先の画像パス（オプション）
+    """
+    # CSVファイルを読み込む
+    data = pd.read_csv(csv_file_path)
+    
+    # 箱ひげ図を描画
+    plt.figure(figsize=(10, 6))  # グラフのサイズを指定
+    sns.boxplot(data=data[columns])
+    
+    # グラフのタイトルとラベルを設定
+    plt.title('Boxplot of Selected Columns', fontsize=16)
+    plt.xlabel('Metrics', fontsize=12)
+    plt.ylabel('Values', fontsize=12)
+    
+    # グラフを表示
+    plt.tight_layout()
+    if output_image_path:
+        plt.savefig(output_image_path)  # 画像として保存（任意）
+    plt.show()
 
 # 使用
 # 作者IDと作品IDとリミックス元ID取得
 directory = '../../dataset/projects'
 author_ids, project_ids, remix_root_ids = extract_ids_from_files(directory)
-print(len(project_ids))
+print("1:" + str(len(project_ids)))
 
 # ブロック数，ブロックの種類数，スプライト数取得
 blocks_lengths, block_types_lengths, sprites_lengths = extract_metrics(project_ids, author_ids, remix_root_ids)
+print("2:" + str(len(project_ids)))
+print("2:" + str(len(blocks_lengths)))
 
 # 作品をjsonファイルに保存
 json_directory = '../../dataset/projects_json'
 remix_json_directory = '../../dataset/projects_remix_json'
 # 作品保存
 save_project_json(project_ids, json_directory)
+print("3:" + str(len(project_ids)))
+print("3:" + str(len(blocks_lengths)))
 # リミックス作品の保存
-save_project_json(remix_root_ids, remix_json_directory)
+# save_project_json(remix_root_ids, remix_json_directory)
+# print("4:" + str(len(project_ids)))
+# print(len((remix_root_ids)))
 
 # 作品のCT_SCOREを取得し，ファイルに保存
 ct_directory = '../../dataset/projects_ct'
-remix_ct_directory = '../../dataset/projects_remix_ct'
+# remix_ct_directory = '../../dataset/projects_remix_ct'
 
 # 作品のCTスコアファイルの保存
-save_ct_score_file(remix_root_ids, json_directory, ct_directory)
+save_ct_score_file(project_ids, json_directory, ct_directory)
+print("5:" + str(len(project_ids)))
+print("5:" + str(len(blocks_lengths)))
 # リミックス作品のCTスコアファイルの保存
-save_ct_score_file(remix_root_ids, remix_json_directory, remix_ct_directory)
+# save_ct_score_file(remix_root_ids, remix_json_directory, remix_ct_directory)
+# print("6:" + str(len(project_ids)))
+# print(len((remix_root_ids)))
 
-ct_score_result = process_specific_json_files(ct_directory, project_ids)
-remix_ct_score_result = process_specific_json_files(remix_ct_directory, remix_root_ids)
+Logic, FlowControl, Synchronization, Abstraction, DataRepresentation, UserInteractivity, Parallelism, CTScore = make_list_CTscore(ct_directory, project_ids)
+# remix_ct_score_result = process_specific_json_files(remix_ct_directory, remix_root_ids)
+print("CTscore :" + str(len((CTScore))))
+print("7:" + str(len(project_ids)))
+print("7:" + str(len(blocks_lengths)))
 
-csv_file_path = '../../dataset'
+csv_file_path = '../../dataset/data.csv'
 
 # csv ni hozon
-save_to_csv(author_ids, project_ids, remix_root_ids, blocks_lengths, block_types_lengths, sprites_lengths, ct_score_result, csv_file_path)
-
-# ファイル数確認
-# print("all_projects: " + str(count_files_in_directory(save_directory)))
-# print("ctscore_projects: " + str(count_files_in_directory(ct_directory)))
-# メトリクス抽出
-# def extract_metrics(project_ids):
-#     blocks_lengths = []
-#     block_types_lengths = []
-#     sprites_lengths = []
-
-#     for project_id in project_ids:
-#         project_manager = ProjectManager(project_id)
-#         blocks_lengths.append(project_manager.get_all_blocks_length())
-#         block_types_lengths.append(project_manager.get_blocks_type_length())
-#         sprites_lengths.append(project_manager.get_sprites_length())
-#         print("blocks count = " + str(blocks_lengths[-1]))
-#         print("blockType =" + str(block_types_lengths[-1]))
-#         print("sprites count = " + str(sprites_lengths[-1]))
-#     return blocks_lengths.copy(), block_types_lengths.copy(), sprites_lengths.copy()
-
-# # csvに保存
-# def save_to_csv(author_ids, project_ids, blocks_lengths, block_types_lengths, sprites_lengths, ct_score, output_file):
-#     with open(output_file, 'w', newline='') as csvfile:
-#         csvwriter = csv.writer(csvfile)
-#         csvwriter.writerow(['Author_ID', 'Project_ID', 'remix_root_ID', 'Blocks_length', 'BlockType_length', 'Sprites_length'])  # ヘッダー行を書き込む
-#         for author_id, project_id, remix_root_id, blocks_length, block_types_length, sprites_length in zip(author_ids, project_ids, remix_root_ids, blocks_lengths, block_types_lengths, sprites_lengths):
-#             csvwriter.writerow([author_id, project_id, remix_root_id, blocks_length, block_types_length, sprites_length])
-
-#     # # # CTスコア合計点数を取得
-#     # mastery = drscratch_analyzer.Mastery()
-#     # mastery.process("../../sample_json/797975999.json")
-#     # mastery.analyze("./out.json")
-
-#     with open('out.json', 'r', encoding='utf-8') as file:
-#         data = json.load(file)
-#     # # CTScoreの値をint型の変数に格納
-#     ct_score = data["CTScore"]
-
-    # # 出力
-    # print("blocks count = " + str(blocks_length))
-    # print("blockType =" + str(blockType_length))
-    # print("sprites count = " + str(sprites_length))
-    # print("CTscore = " + str(ct_score))
-
-
-# プロジェクトの大元のリミックス元とそこから何回派生しているか
-# PM = scratch_client.get_remix_parent(sample_id2)
-# if PM:
-#     # print("parent_id: " + str(PM["parent_id"]))
-#     # print("deep: " + str(PM["deep"]))
-#     with open('data/test_PM_' + str(sample_id2) + '.json', 'w') as f:
-#         json.dump(str(PM), f, indent=2)
-
-# print("metaData: " + str(MD))
-# jsonファイルに出力
-# with open('data/test_MD_' + str(sample_id2) + '.json', 'w') as f:
-#     json.dump(str(MD), f, indent=2)
-
-# リミックスしていたら1個前のプロジェクトのID出力
-# parentが1個前
-# if MD["remix"]["parent"]:
-#     # print("parent_id: " + str(MD["remix"]["parent"]))
-#     with open('data/test_MD_' + str(sample_id2) + '.json', 'w') as f:
-#         json.dump(str(MD["remix"]["parent"]), f, indent=2)
+save_to_csv(author_ids, project_ids, remix_root_ids, blocks_lengths, block_types_lengths, sprites_lengths, Logic, FlowControl, Synchronization, Abstraction, DataRepresentation, UserInteractivity, Parallelism, CTScore, csv_file_path)
+# hakohigezu
+plot_boxplot_from_csv(csv_file_path, "ブロック数", '../../dataset/hakohigezu/countblock.png')
+plot_boxplot_from_csv(csv_file_path, "ブロックの種類数", '../../dataset/hakohigezu/typeblock.png')
+plot_boxplot_from_csv(csv_file_path, "スプライト数", '../../dataset/hakohigezu/sprite.png')
+plot_boxplot_from_csv(csv_file_path, "論理", '../../dataset/hakohigezu/ronri.png')
+plot_boxplot_from_csv(csv_file_path, "制御フロー", '../../dataset/hakohigezu/seigyohuro-.png')
+plot_boxplot_from_csv(csv_file_path, "同期", '../../dataset/hakohigezu/douki.png')
+plot_boxplot_from_csv(csv_file_path, "抽象化", '../../dataset/hakohigezu/tyuusyouka.png')
+plot_boxplot_from_csv(csv_file_path, "データ表現", '../../dataset/hakohigezu/de-tahyougen.png')
+plot_boxplot_from_csv(csv_file_path, "ユーザとの対話性", '../../dataset/hakohigezu/yu-zataiwasei.png')
+plot_boxplot_from_csv(csv_file_path, "並列処理", '../../dataset/hakohigezu/heiretusyori.png')
+plot_boxplot_from_csv(csv_file_path, "CTスコア", '../../dataset/hakohigezu/CTscore.png')
