@@ -101,6 +101,21 @@ class ProjectManager:
 
         return len(self.__blocks)
     
+    # def get_all_blocks_length(self):
+    #     """現在管理している全スプライトに含まれるブロック数の合計を取得
+
+    #     Returns:
+    #         int: 現在管理している全スプライトに含まれるブロック数の合計を返す
+    #     """
+        
+    #     length = 0
+    #     for target in self.__sprites:
+    #         # if isinstance(target["blocks"], list):
+    #         #     length += len(target["blocks"])
+    #         length += len(self.__blocks)
+
+    #     return length
+
     def get_all_blocks_length(self):
         """現在管理している全スプライトに含まれるブロック数の合計を取得
 
@@ -110,10 +125,14 @@ class ProjectManager:
         
         length = 0
         for target in self.__sprites:
-            if isinstance(target["blocks"], list):
+            # 各スプライトの blocks が辞書型であるかを確認し、そのキー数を合計
+            if isinstance(target["blocks"], dict):
                 length += len(target["blocks"])
+            else:
+                print(f"スプライト {target['name']} に 'blocks' が存在しないか、適切な形式ではありません")
 
         return length
+
     
     def get_sprites_length(self):
         """作品のスプライト数を取得

@@ -102,7 +102,7 @@ def extract_metrics(project_ids, author_ids, remix_root_ids):
             block_types_lengths.append(project_manager.get_blocks_type_length())
             sprites_lengths.append(project_manager.get_sprites_length())
 
-            # print("blocks count = " + str(blocks_lengths[i]))
+            # print("blocks count = " + str(blocks_lengths[-1]))
             # print("blockType = " + str(block_types_lengths[-1]))
             # print("sprites count = " + str(sprites_lengths[-1]))
             i += 1
@@ -286,9 +286,9 @@ def plot_boxplot_from_csv(csv_file_path, columns, output_image_path=None):
     data = pd.read_csv(csv_file_path)
     
     # 箱ひげ図を描画
-    plt.figure(figsize=(2, 6))  # グラフのサイズを指定
-    sns.boxplot(data=data[columns], palette=["#ADD8E6"] * len(columns))
-    # plt.ylim(0, data[columns].max().max())  # 各列の最大値を取得し、それに基づいて範囲を設定
+    plt.figure(figsize=(10, 6))  # グラフのサイズを指定
+    sns.boxplot(data=data[columns])
+    
     # グラフのタイトルとラベルを設定
     plt.title('Boxplot of Selected Columns', fontsize=16)
     plt.xlabel('Metrics', fontsize=12)
@@ -337,7 +337,7 @@ print("5:" + str(len(blocks_lengths)))
 # print(len((remix_root_ids)))
 
 Logic, FlowControl, Synchronization, Abstraction, DataRepresentation, UserInteractivity, Parallelism, CTScore = make_list_CTscore(ct_directory, project_ids)
-# remix_ct_score_result = make_list_CTscore(remix_ct_directory, remix_root_ids)
+# remix_ct_score_result = process_specific_json_files(remix_ct_directory, remix_root_ids)
 print("CTscore :" + str(len((CTScore))))
 print("7:" + str(len(project_ids)))
 print("7:" + str(len(blocks_lengths)))
