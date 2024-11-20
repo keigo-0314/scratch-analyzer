@@ -102,9 +102,9 @@ def extract_metrics(project_ids, author_ids, remix_root_ids):
             block_types_lengths.append(project_manager.get_blocks_type_length())
             sprites_lengths.append(project_manager.get_sprites_length())
 
-            # print("blocks count = " + str(blocks_lengths[i]))
-            # print("blockType = " + str(block_types_lengths[-1]))
-            # print("sprites count = " + str(sprites_lengths[-1]))
+            print("blocks count = " + str(blocks_lengths[i]))
+            print("blockType = " + str(block_types_lengths[-1]))
+            print("sprites count = " + str(sprites_lengths[-1]))
             i += 1
         except IndexError:
             print(f"プロジェクトID {project_id} の処理中にインデックスエラーが発生　リストから削除")
@@ -159,9 +159,9 @@ def save_project_json(project_ids, directory):
             blocks_lengths.pop(i)
             block_types_lengths.pop(i)
             sprites_lengths.pop(i)
-            # project_error += 1
-    # print("program_error = " + str(program_error))
-    # print("project_error = " + str(project_error))
+    #         project_error += 1
+    ## print("program_error = " + str(program_error))
+    ## print("project_error = " + str(project_error))
         
 def save_ct_score_file(project_ids, json_directory, ct_directory):
     """プロジェクトCTスコアをファイルに保存
@@ -300,61 +300,120 @@ def plot_boxplot_from_csv(csv_file_path, columns, output_image_path=None):
         plt.savefig(output_image_path)  # 画像として保存（任意）
     plt.show()
 
-# 使用
-# 作者IDと作品IDとリミックス元ID取得
-directory = '../../dataset/projects'
-author_ids, project_ids, remix_root_ids = extract_ids_from_files(directory)
-print("1:" + str(len(project_ids)))
 
-# ブロック数，ブロックの種類数，スプライト数取得
-blocks_lengths, block_types_lengths, sprites_lengths = extract_metrics(project_ids, author_ids, remix_root_ids)
-print("2:" + str(len(project_ids)))
-print("2:" + str(len(blocks_lengths)))
 
-# 作品をjsonファイルに保存
-json_directory = '../../dataset/projects_json'
-remix_json_directory = '../../dataset/projects_remix_json'
-# 作品保存
-save_project_json(project_ids, json_directory)
-print("3:" + str(len(project_ids)))
-print("3:" + str(len(blocks_lengths)))
-# リミックス作品の保存
-# save_project_json(remix_root_ids, remix_json_directory)
-# print("4:" + str(len(project_ids)))
-# print(len((remix_root_ids)))
+# # 使用
+# # 作者IDと作品IDとリミックス元ID取得
+# directory = '../../dataset/projects2'
+# author_ids, project_ids, remix_root_ids = extract_ids_from_files(directory)
+# print("1:" + str(len(project_ids)))
 
-# 作品のCT_SCOREを取得し，ファイルに保存
-ct_directory = '../../dataset/projects_ct'
-# remix_ct_directory = '../../dataset/projects_remix_ct'
+# # ブロック数，ブロックの種類数，スプライト数取得
+# blocks_lengths, block_types_lengths, sprites_lengths = extract_metrics(project_ids, author_ids, remix_root_ids)
+# print("2:" + str(len(project_ids)))
+# print("2:" + str(len(blocks_lengths)))
 
-# 作品のCTスコアファイルの保存
-save_ct_score_file(project_ids, json_directory, ct_directory)
-print("5:" + str(len(project_ids)))
-print("5:" + str(len(blocks_lengths)))
-# リミックス作品のCTスコアファイルの保存
-# save_ct_score_file(remix_root_ids, remix_json_directory, remix_ct_directory)
-# print("6:" + str(len(project_ids)))
-# print(len((remix_root_ids)))
+# # 作品をjsonファイルに保存
+# json_directory = '../../dataset/projects2_json'
+# remix_json_directory = '../../dataset/projects_remix_json'
+# # 作品保存
+# save_project_json(project_ids, json_directory)
+# print("3:" + str(len(project_ids)))
+# print("3:" + str(len(blocks_lengths)))
+# # リミックス作品の保存
+# # save_project_json(remix_root_ids, remix_json_directory)
+# # print("4:" + str(len(project_ids)))
+# # print(len((remix_root_ids)))
 
-Logic, FlowControl, Synchronization, Abstraction, DataRepresentation, UserInteractivity, Parallelism, CTScore = make_list_CTscore(ct_directory, project_ids)
-# remix_ct_score_result = make_list_CTscore(remix_ct_directory, remix_root_ids)
-print("CTscore :" + str(len((CTScore))))
-print("7:" + str(len(project_ids)))
-print("7:" + str(len(blocks_lengths)))
+# # 作品のCT_SCOREを取得し，ファイルに保存
+# ct_directory = '../../dataset/projects2_ct'
+# # remix_ct_directory = '../../dataset/projects_remix_ct'
 
-csv_file_path = '../../dataset/data.csv'
+# # 作品のCTスコアファイルの保存
+# save_ct_score_file(project_ids, json_directory, ct_directory)
+# print("5:" + str(len(project_ids)))
+# print("5:" + str(len(blocks_lengths)))
+# # リミックス作品のCTスコアファイルの保存
+# # save_ct_score_file(remix_root_ids, remix_json_directory, remix_ct_directory)
+# # print("6:" + str(len(project_ids)))
+# # print(len((remix_root_ids)))
 
-# csv ni hozon
-save_to_csv(author_ids, project_ids, remix_root_ids, blocks_lengths, block_types_lengths, sprites_lengths, Logic, FlowControl, Synchronization, Abstraction, DataRepresentation, UserInteractivity, Parallelism, CTScore, csv_file_path)
-# hakohigezu
-plot_boxplot_from_csv(csv_file_path, "ブロック数", '../../dataset/hakohigezu/countblock.png')
-plot_boxplot_from_csv(csv_file_path, "ブロックの種類数", '../../dataset/hakohigezu/typeblock.png')
-plot_boxplot_from_csv(csv_file_path, "スプライト数", '../../dataset/hakohigezu/sprite.png')
-plot_boxplot_from_csv(csv_file_path, "論理", '../../dataset/hakohigezu/ronri.png')
-plot_boxplot_from_csv(csv_file_path, "制御フロー", '../../dataset/hakohigezu/seigyohuro-.png')
-plot_boxplot_from_csv(csv_file_path, "同期", '../../dataset/hakohigezu/douki.png')
-plot_boxplot_from_csv(csv_file_path, "抽象化", '../../dataset/hakohigezu/tyuusyouka.png')
-plot_boxplot_from_csv(csv_file_path, "データ表現", '../../dataset/hakohigezu/de-tahyougen.png')
-plot_boxplot_from_csv(csv_file_path, "ユーザとの対話性", '../../dataset/hakohigezu/yu-zataiwasei.png')
-plot_boxplot_from_csv(csv_file_path, "並列処理", '../../dataset/hakohigezu/heiretusyori.png')
-plot_boxplot_from_csv(csv_file_path, "CTスコア", '../../dataset/hakohigezu/CTscore.png')
+# Logic, FlowControl, Synchronization, Abstraction, DataRepresentation, UserInteractivity, Parallelism, CTScore = make_list_CTscore(ct_directory, project_ids)
+# # remix_ct_score_result = make_list_CTscore(remix_ct_directory, remix_root_ids)
+# print("CTscore :" + str(len((CTScore))))
+# print("7:" + str(len(project_ids)))
+# print("7:" + str(len(blocks_lengths)))
+
+# csv_file_path = '../../dataset/data2.csv'
+
+# # csv ni hozon
+# save_to_csv(author_ids, project_ids, remix_root_ids, blocks_lengths, block_types_lengths, sprites_lengths, Logic, FlowControl, Synchronization, Abstraction, DataRepresentation, UserInteractivity, Parallelism, CTScore, csv_file_path)
+# # hakohigezu
+# plot_boxplot_from_csv(csv_file_path, "ブロック数", '../../dataset/hakohigezu/countblock.png')
+# plot_boxplot_from_csv(csv_file_path, "ブロックの種類数", '../../dataset/hakohigezu/typeblock.png')
+# plot_boxplot_from_csv(csv_file_path, "スプライト数", '../../dataset/hakohigezu/sprite.png')
+# plot_boxplot_from_csv(csv_file_path, "論理", '../../dataset/hakohigezu/ronri.png')
+# plot_boxplot_from_csv(csv_file_path, "制御フロー", '../../dataset/hakohigezu/seigyohuro-.png')
+# plot_boxplot_from_csv(csv_file_path, "同期", '../../dataset/hakohigezu/douki.png')
+# plot_boxplot_from_csv(csv_file_path, "抽象化", '../../dataset/hakohigezu/tyuusyouka.png')
+# plot_boxplot_from_csv(csv_file_path, "データ表現", '../../dataset/hakohigezu/de-tahyougen.png')
+# plot_boxplot_from_csv(csv_file_path, "ユーザとの対話性", '../../dataset/hakohigezu/yu-zataiwasei.png')
+# plot_boxplot_from_csv(csv_file_path, "並列処理", '../../dataset/hakohigezu/heiretusyori.png')
+# plot_boxplot_from_csv(csv_file_path, "CTスコア", '../../dataset/hakohigezu/CTscore.png')
+# ctdirectory = '../../dataset/projects2_ct'
+# print(count_files_in_directory(ctdirectory))
+
+## 完成済
+
+
+# # データを読み込む際に、リミックス元ID列を文字列型として指定
+# df = pd.read_csv('../../dataset/data2.csv', dtype={"リミックス元ID": str})
+# # リミックス元ID列から重複を削除し、NaN（空白セル）を除去してリストに変換
+# remix_ids = df["リミックス元ID"].dropna().unique().tolist()
+# # リストを表示
+# print(remix_ids)
+# json_directory = '../../dataset/2remix_json'
+# save_project_json(remix_ids, json_directory)
+# ct_directory = ('../../dataset/2remix_ct')
+# save_ct_score_file(remix_ids, json_directory, ct_directory)
+
+
+# # リミックス元IDの出現回数をカウントし、多い順にソート
+# remix_counts = df["リミックス元ID"].value_counts().reset_index()
+# remix_counts.columns = ["リミックス元ID", "出現回数"]
+# # 出現回数が多い順に並べたデータを新しいCSVファイルに保存
+# remix_counts.to_csv("remix_counts.csv", index=False)
+
+
+# # プロジェクト保存とCTスコア保存　単体で
+# # プロジェクトIDとディレクトリの設定
+# project_id = '268054710'
+# directory = '../../app/sample'
+
+# # プロジェクトJSONデータの取得
+# project_json = scratch_client.get_project(project_id)
+# if project_json:
+#     # JSONファイルのパスを設定して保存
+#     file_path = os.path.join(directory, f"{project_id}.json")
+#     with open(file_path, 'w', encoding='utf-8') as f:
+#         json.dump(project_json, f, ensure_ascii=False, indent=4)
+#         print(f"プロジェクトID {project_id} のJSONを {file_path} に保存しました。")
+
+#     # Masteryオブジェクトの作成と処理
+#     mastery = drscratch_analyzer.Mastery()
+#     mastery.process(file_path)
+#     mastery.analyze(os.path.join(directory, f"{project_id}_ct.json"))
+# project_manager = ProjectManager(project_id)
+# print(project_manager.get_all_blocks_length())
+# print(project_manager.get_blocks_type_length())
+# print(project_manager.get_sprites_length())
+
+
+## 対象の作品をリミックスした作品をcsvから抽出
+# CSVファイルの読み込み
+df = pd.read_csv('../../dataset/data2.csv', dtype={"リミックス元ID": str})
+# リミックス元IDが 'remixNo' のものだけをフィルタリング
+filtered_df = df[df["リミックス元ID"] == "536199882"]
+# 抽出したデータを新しいCSVファイルに保存
+filtered_df.to_csv("536199882_data.csv", index=False)
+print("リミックス元IDがremixNoのデータを'remixNo_data.csv'に保存しました。")
