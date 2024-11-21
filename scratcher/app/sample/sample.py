@@ -221,12 +221,11 @@ def make_list_CTscore(ct_directory, project_ids):
     
     return Logic, FlowControl, Synchronization, Abstraction, DataRepresentation, UserInteractivity, Parallelism, CTScore
 
-def saveProjects(project_ids):
+def saveProjects(project_ids, directory):
     """作品IDのリストから作品保存をする"""
     i = 0
     while i < len(project_ids):
         project_id = project_ids[i]
-        directory = '../../datase/projects_remix_json'
 
         # プロジェクトJSONデータの取得
         project_json = scratch_client.get_project(project_id)
@@ -300,53 +299,56 @@ def plot_boxplot_from_csv(csv_file_path, columns, output_image_path=None):
     plt.show()
 
 
-# # 使用
-# # 作者IDと作品IDとリミックス元ID取得
-# directory = '../../dataset/projects2'
+## 使用
+## 作者IDと作品IDとリミックス元ID取得
+# directory = '../../dataset/projects'
 # author_ids, project_ids, remix_root_ids = extract_ids_from_files(directory)
 # print("1:" + str(len(project_ids)))
 
-# # ブロック数，ブロックの種類数，スプライト数取得
+## ブロック数，ブロックの種類数，スプライト数取得
 # blocks_lengths, block_types_lengths, sprites_lengths = extract_metrics(project_ids, author_ids, remix_root_ids)
 # print("2:" + str(len(project_ids)))
 # print("2:" + str(len(blocks_lengths)))
 
-# # 作品をjsonファイルに保存
-# json_directory = '../../dataset/projects2_json'
+## 作品をjsonファイルに保存
+# json_directory = '../../dataset/projects_json'
 # remix_json_directory = '../../dataset/projects_remix_json'
-# # 作品保存
+
+## 作品保存
 # save_project_json(project_ids, json_directory)
 # print("3:" + str(len(project_ids)))
 # print("3:" + str(len(blocks_lengths)))
-# # リミックス作品の保存
+
+## リミックス作品の保存
 # # save_project_json(remix_root_ids, remix_json_directory)
 # # print("4:" + str(len(project_ids)))
 # # print(len((remix_root_ids)))
 
-# # 作品のCT_SCOREを取得し，ファイルに保存
-# ct_directory = '../../dataset/projects2_ct'
+## 作品のCT_SCOREを取得し，ファイルに保存
+# ct_directory = '../../dataset/projects_ct'
 # # remix_ct_directory = '../../dataset/projects_remix_ct'
 
-# # 作品のCTスコアファイルの保存
+## 作品のCTスコアファイルの保存
 # save_ct_score_file(project_ids, json_directory, ct_directory)
 # print("5:" + str(len(project_ids)))
 # print("5:" + str(len(blocks_lengths)))
-# # リミックス作品のCTスコアファイルの保存
+
+## リミックス作品のCTスコアファイルの保存
 # # save_ct_score_file(remix_root_ids, remix_json_directory, remix_ct_directory)
 # # print("6:" + str(len(project_ids)))
 # # print(len((remix_root_ids)))
 
+## スコアをリスト化
 # Logic, FlowControl, Synchronization, Abstraction, DataRepresentation, UserInteractivity, Parallelism, CTScore = make_list_CTscore(ct_directory, project_ids)
-# # remix_ct_score_result = make_list_CTscore(remix_ct_directory, remix_root_ids)
 # print("CTscore :" + str(len((CTScore))))
 # print("7:" + str(len(project_ids)))
 # print("7:" + str(len(blocks_lengths)))
 
-# csv_file_path = '../../dataset/data2.csv'
-
-# # csv ni hozon
+## csvに保存
+# csv_file_path = '../../dataset/data.csv'
 # save_to_csv(author_ids, project_ids, remix_root_ids, blocks_lengths, block_types_lengths, sprites_lengths, Logic, FlowControl, Synchronization, Abstraction, DataRepresentation, UserInteractivity, Parallelism, CTScore, csv_file_path)
-# # hakohigezu
+
+## 箱ひげ図の保存
 # plot_boxplot_from_csv(csv_file_path, "ブロック数", '../../dataset/hakohigezu/countblock.png')
 # plot_boxplot_from_csv(csv_file_path, "ブロックの種類数", '../../dataset/hakohigezu/typeblock.png')
 # plot_boxplot_from_csv(csv_file_path, "スプライト数", '../../dataset/hakohigezu/sprite.png')
@@ -358,55 +360,45 @@ def plot_boxplot_from_csv(csv_file_path, columns, output_image_path=None):
 # plot_boxplot_from_csv(csv_file_path, "ユーザとの対話性", '../../dataset/hakohigezu/yu-zataiwasei.png')
 # plot_boxplot_from_csv(csv_file_path, "並列処理", '../../dataset/hakohigezu/heiretusyori.png')
 # plot_boxplot_from_csv(csv_file_path, "CTスコア", '../../dataset/hakohigezu/CTscore.png')
-# ctdirectory = '../../dataset/projects2_ct'
-# print(count_files_in_directory(ctdirectory))
 
-## 完成済
-
-
-# # データを読み込む際に、リミックス元ID列を文字列型として指定
+## リミックス元作品の保存
 # df = pd.read_csv('../../dataset/data2.csv', dtype={"リミックス元ID": str})
-# # リミックス元ID列から重複を削除し、NaN（空白セル）を除去してリストに変換
+# project_ids = df["リミックス元ID"].dropna().unique().tolist()
+# directory = '../../dataset/remix_json'
+# saveProjects(project_ids, directory)
+
+## csvデータを読み込む際に,リミックス元ID列を文字列型として指定
+# df = pd.read_csv('../../dataset/data2.csv', dtype={"リミックス元ID": str})
+## リミックス元ID列から重複を削除し、NaN（空白セル）を除去してリストに変換
 # remix_ids = df["リミックス元ID"].dropna().unique().tolist()
-# # リストを表示
+## リストを表示
 # print(remix_ids)
-# json_directory = '../../dataset/2remix_json'
-# save_project_json(remix_ids, json_directory)
-# ct_directory = ('../../dataset/2remix_ct')
+# json_directory = '../../dataset/remix_json'
+# saveProjects(remix_ids, json_directory)
+# ct_directory = ('../../dataset/remix_ct')
 # save_ct_score_file(remix_ids, json_directory, ct_directory)
 
-
-# # リミックス元IDの出現回数をカウントし、多い順にソート
+## リミックス元IDの出現回数をカウントし、多い順にソート
 # remix_counts = df["リミックス元ID"].value_counts().reset_index()
 # remix_counts.columns = ["リミックス元ID", "出現回数"]
-# # 出現回数が多い順に並べたデータを新しいCSVファイルに保存
+## 出現回数が多い順に並べたデータを新しいCSVファイルに保存
 # remix_counts.to_csv("remix_counts.csv", index=False)
 
-
-
-
-#     # Masteryオブジェクトの作成と処理
-#     mastery = drscratch_analyzer.Mastery()
-#     mastery.process(file_path)
-#     mastery.analyze(os.path.join(directory, f"{project_id}_ct.json"))
+## ブロック数，ブロックの種類数，スプライト数を出力させる
+# mastery = drscratch_analyzer.Mastery()
+# mastery.process(file_path)
+# mastery.analyze(os.path.join(directory, f"{project_id}_ct.json"))
 # project_manager = ProjectManager(project_id)
 # print(project_manager.get_all_blocks_length())
 # print(project_manager.get_blocks_type_length())
 # print(project_manager.get_sprites_length())
 
-
-## 対象の作品をリミックスした作品をcsvから抽出
+## 対象の作品をリミックスした作品をcsvから抽出してまとめる
 # CSVファイルの読み込み
-# df = pd.read_csv('../../dataset/data2.csv', dtype={"リミックス元ID": str})
+# df = pd.read_csv('../../dataset/data.csv', dtype={"リミックス元ID": str})
 # リミックス元IDが 'remixNo' のものだけをフィルタリング
 # filtered_df = df[df["リミックス元ID"] == "536199882"]
 # 抽出したデータを新しいCSVファイルに保存
 # filtered_df.to_csv("536199882_data.csv", index=False)
 # print("リミックス元IDがremixNoのデータを'remixNo_data.csv'に保存しました。")
 
-# リミックス元作品の保存
-# df = pd.read_csv('../../dataset/data2.csv', dtype={"リミックス元ID": str})
-# project_ids = df["リミックス元ID"].dropna().unique().tolist()
-# saveProjects(project_ids)
-
-print(count_files_in_directory('../../dataset/2projects_json'))
