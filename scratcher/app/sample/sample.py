@@ -26,9 +26,6 @@ def extract_ids_from_files(directory):
     author_ids = []
     project_ids = []
     remix_root_ids = []
-    # file_error = 0
-    # decode_error = 0
-    # program_error = 0
     author_project_count = defaultdict(int)
     author_projects = defaultdict(list)
     file_pattern = os.path.join(directory, '*.json')
@@ -56,13 +53,10 @@ def extract_ids_from_files(directory):
                                 author_projects[author_id].append((project_id, remix_root_id))
                     else:
                         print(f"ファイルのデータ形式が予期しない形式: {file_path}")
-                        # file_error += 1 
             except json.JSONDecodeError:
                 print(f"JSONのデコードエラーが発生: {file_path}")
-                # decode_error += 1
             except Exception as e:
                 print(f"ファイルの読み込み中にエラーが発生 {file_path}: {e}")
-                # program_error += 1
 
     for author_id, count in author_project_count.items():
         if count >= 20:
@@ -73,10 +67,6 @@ def extract_ids_from_files(directory):
 
     if not author_ids or not project_ids or not remix_root_ids:
         print("指定されたディレクトリには有効なデータがない")
-
-    # print("file_error: " + str(file_error))
-    # print("decode_error: " + str(decode_error))
-    # print("program_error: " + str(program_error))
     return author_ids, project_ids, remix_root_ids
 
 def extract_metrics(project_ids, author_ids, remix_root_ids):
@@ -91,7 +81,6 @@ def extract_metrics(project_ids, author_ids, remix_root_ids):
     blocks_lengths = []
     block_types_lengths = []
     sprites_lengths = []
-    # API_error = 0
 
     i = 0
     while i < len(project_ids):
@@ -111,15 +100,12 @@ def extract_metrics(project_ids, author_ids, remix_root_ids):
             project_ids.pop(i)
             author_ids.pop(i)
             remix_root_ids.pop(i)
-            # API_error += 1
         except Exception as e:
             print(f"プロジェクトID {project_id} の処理中にエラーが発生　リストから削除: {e}")
             project_ids.pop(i)
             author_ids.pop(i)
             remix_root_ids.pop(i)
-            # API_error += 1
 
-    # print("API_eroor = " + str(API_error))
     return blocks_lengths.copy(), block_types_lengths.copy(), sprites_lengths.copy()
 
 def save_project_json(project_ids, directory):
@@ -128,7 +114,6 @@ def save_project_json(project_ids, directory):
         project_id (int): プロジェクトID
         directory (str): 保存先ディレクトリのパス
     """
-    # program_error = 0
 
     i = 0
     while i < len(project_ids):
@@ -150,7 +135,6 @@ def save_project_json(project_ids, directory):
                 blocks_lengths.pop(i)
                 block_types_lengths.pop(i)
                 sprites_lengths.pop(i)
-                # program_error += 1
         else:
             print(f"プロジェクトID {project_id} のJSONを取得不可")
             project_ids.pop(i)
@@ -159,9 +143,6 @@ def save_project_json(project_ids, directory):
             blocks_lengths.pop(i)
             block_types_lengths.pop(i)
             sprites_lengths.pop(i)
-    #         project_error += 1
-    ## print("program_error = " + str(program_error))
-    ## print("project_error = " + str(project_error))
         
 def save_ct_score_file(project_ids, json_directory, ct_directory):
     """プロジェクトCTスコアをファイルに保存
@@ -188,7 +169,6 @@ def save_ct_score_file(project_ids, json_directory, ct_directory):
             sprites_lengths.pop(i)
             print(e)
             i += 1
-
 
 def count_files_in_directory(directory, pattern="*"):
     """指定されたディレクトリ内のファイル数をカウント
@@ -240,6 +220,25 @@ def make_list_CTscore(ct_directory, project_ids):
             print(f"File for {project_id} not found.")
     
     return Logic, FlowControl, Synchronization, Abstraction, DataRepresentation, UserInteractivity, Parallelism, CTScore
+
+def saveProjects(project_ids):
+    """作品IDのリストから作品保存をする"""
+    i = 0
+    while i < len(project_ids):
+        project_id = project_ids[i]
+        directory = '../../datase/projects_remix_json'
+
+        # プロジェクトJSONデータの取得
+        project_json = scratch_client.get_project(project_id)
+        if project_json:
+            # JSONファイルのパスを設定して保存
+            file_path = os.path.join(directory, f"{project_id}.json")
+            with open(file_path, 'w', encoding='utf-8') as f:
+                json.dump(project_json, f, ensure_ascii=False, indent=4)
+                print(f"プロジェクトID {project_id} のJSONを {file_path} に保存しました")
+        else:
+            print(f"プロジェクトID {project_id} のJSONを保存できませんでした")
+        i += 1
 
 def save_to_csv(author_ids, project_ids, remix_root_ids, blocks_lengths, block_types_lengths, sprites_lengths, Logic, FlowControl, Synchronization, Abstraction, DataRepresentation, UserInteractivity, Parallelism, CTScore, csv_file_path):
     # CSVファイルの保存先ディレクトリを確認・作成
@@ -299,7 +298,6 @@ def plot_boxplot_from_csv(csv_file_path, columns, output_image_path=None):
     if output_image_path:
         plt.savefig(output_image_path)  # 画像として保存（任意）
     plt.show()
-
 
 
 # # 使用
@@ -385,19 +383,7 @@ def plot_boxplot_from_csv(csv_file_path, columns, output_image_path=None):
 # remix_counts.to_csv("remix_counts.csv", index=False)
 
 
-# # プロジェクト保存とCTスコア保存　単体で
-# # プロジェクトIDとディレクトリの設定
-# project_id = '268054710'
-# directory = '../../app/sample'
 
-# # プロジェクトJSONデータの取得
-# project_json = scratch_client.get_project(project_id)
-# if project_json:
-#     # JSONファイルのパスを設定して保存
-#     file_path = os.path.join(directory, f"{project_id}.json")
-#     with open(file_path, 'w', encoding='utf-8') as f:
-#         json.dump(project_json, f, ensure_ascii=False, indent=4)
-#         print(f"プロジェクトID {project_id} のJSONを {file_path} に保存しました。")
 
 #     # Masteryオブジェクトの作成と処理
 #     mastery = drscratch_analyzer.Mastery()
@@ -411,9 +397,16 @@ def plot_boxplot_from_csv(csv_file_path, columns, output_image_path=None):
 
 ## 対象の作品をリミックスした作品をcsvから抽出
 # CSVファイルの読み込み
-df = pd.read_csv('../../dataset/data2.csv', dtype={"リミックス元ID": str})
+# df = pd.read_csv('../../dataset/data2.csv', dtype={"リミックス元ID": str})
 # リミックス元IDが 'remixNo' のものだけをフィルタリング
-filtered_df = df[df["リミックス元ID"] == "536199882"]
+# filtered_df = df[df["リミックス元ID"] == "536199882"]
 # 抽出したデータを新しいCSVファイルに保存
-filtered_df.to_csv("536199882_data.csv", index=False)
-print("リミックス元IDがremixNoのデータを'remixNo_data.csv'に保存しました。")
+# filtered_df.to_csv("536199882_data.csv", index=False)
+# print("リミックス元IDがremixNoのデータを'remixNo_data.csv'に保存しました。")
+
+# リミックス元作品の保存
+# df = pd.read_csv('../../dataset/data2.csv', dtype={"リミックス元ID": str})
+# project_ids = df["リミックス元ID"].dropna().unique().tolist()
+# saveProjects(project_ids)
+
+print(count_files_in_directory('../../dataset/2projects_json'))
