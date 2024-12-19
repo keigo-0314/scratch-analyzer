@@ -16,7 +16,9 @@ class ProjectManager:
     Args:
         __ID (int): 現在管理しているScratch作品のID
         __project (dictionary): 現在管理しているScratch作品全体のプログラム
+        __start_splites (boolean): 先頭のスプライトがステージかどうかの判定
         __sprites (dictionary): 現在管理しているScratch作品のスプライトのプログラム
+        __opcodes (dictionary): opcodeをリストで取得
         __blocks (dictionary): 現在管理しているScratch作品のスプライトに含まれるスプライトのブロック
         __description（str）: 現在管理しているScratch作品の使用方法
     """
@@ -32,11 +34,21 @@ class ProjectManager:
             self.__ID = id
             self.__project = scratch_client.get_project(self.__ID)
             self.__head_blocks = self.__project["targets"][1]["blocks"]
-            self.__sprites = self.__project["targets"]
-            self.__blocks = list(map(self.__format_blocks, self.__project["target"]))
+            self.__start_splites = self.__project["targets"][0]["isStage"]
+            try:
+                self.__sprites = self.__project["targets"]
+            except Exception as e:
+                print(e)
+            # self.__sprites = self.__project["targets"]
+            # print(self.__sprites)
+            self.__blocks = [block_data for block_data in self.__project["targets"][1]["blocks"].values()]
+            self.__opcodes = []
+            for block_opcode in self.__blocks:
+                self.__opcodes.append(block_opcode['opcode'])
+            # print(self.__opcodes)
+            # self.__blocks = list(map(self.__format_blocks, self.__project["targets"]))
             self.__description = scratch_client.get_description(self.__ID)
         except Exception as e:
-            print("Scratch3.0以降の作品を入力してください．")
             print(e)
 
     def get_id(self):
@@ -89,6 +101,21 @@ class ProjectManager:
 
         return len(self.__blocks)
     
+    # def get_all_blocks_length(self):
+    #     """現在管理している全スプライトに含まれるブロック数の合計を取得
+
+    #     Returns:
+    #         int: 現在管理している全スプライトに含まれるブロック数の合計を返す
+    #     """
+        
+    #     length = 0
+    #     for target in self.__sprites:
+    #         # if isinstance(target["blocks"], list):
+    #         #     length += len(target["blocks"])
+    #         length += len(self.__blocks)
+
+    #     return length
+
     def get_all_blocks_length(self):
         """現在管理している全スプライトに含まれるブロック数の合計を取得
 
@@ -97,10 +124,37 @@ class ProjectManager:
         """
         
         length = 0
-        for target in self.__blocks:
-            length += len(target["blocks"])
+        for target in self.__sprites:
+            # 各スプライトの blocks が辞書型であるかを確認し、そのキー数を合計
+            if isinstance(target["blocks"], dict):
+                length += len(target["blocks"])
+            else:
+                print(f"スプライト {target['name']} に 'blocks' が存在しないか、適切な形式ではありません")
 
         return length
+
+    
+    def get_sprites_length(self):
+        """作品のスプライト数を取得
+        
+        Retuens:
+            int: 作品のスプライト数を返す
+        """
+
+        return len(self.__sprites)
+    
+    def get_blocks_type_length(self):
+        """作品のブロックの種類数を取得
+        
+        Retuens:
+            int: ブロックの種類数を返す
+        """
+
+        # # opcodeの種類数を取得する
+        unique_opcodes = set(self.__opcodes)
+        opcode_count = len(unique_opcodes)
+        return opcode_count
+    
 
     def get_ast(self, path=""):
         """現在管理しているブロックをASTに変換して取得
