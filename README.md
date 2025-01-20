@@ -52,7 +52,8 @@
 ├── api
 │   ├── __init__.py
 |   ├── google_client.py #GoogleFormAPIを叩くためのモジュール
-│   └── scratch_client.py #ScratchAPIを叩くためのモジュール
+│   ├── scratch_client.py #ScratchAPIを叩くためのモジュール
+|   └── drscratch_analuzer.py #DrScratchAPIを叩くためのモジュール
 ├── __init__.py
 ├── tools
 │   ├── sorter.py #Scratchプログラムを命令処理順にソートするモジュール
